@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:canineappadmin/controllers/AuthentificationCtrl.dart';
 import 'package:canineappadmin/utils/Routes.dart';
+import 'package:canineappadmin/widgets/imageProfileWidget.dart';
+import 'package:canineappadmin/widgets/showMsg.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -12,6 +14,7 @@ import 'package:provider/provider.dart';
 import '../controllers/SearchController.dart';
 import '../models/Profession.dart';
 import '../models/UserModel.dart';
+import '../utils/Constantes.dart';
 import '../utils/StockageKeys.dart';
 import '../utils/common_widgets/gradient_background.dart';
 import '../utils/helpers/snackbar_helper.dart';
@@ -35,6 +38,7 @@ class _MembrespageState extends State<Membrespage> {
     ProfessionModel(id: 5, title: "Toiletteur"),
     ProfessionModel(id: 6, title: "Dealeur"),
     ProfessionModel(id: 7, title: "Cynophile"),
+    ProfessionModel(id: 8, title: "Instructeur"),
   ];
 
   @override
@@ -64,12 +68,91 @@ class _MembrespageState extends State<Membrespage> {
   }
 
 
+
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> results = [];
   bool _hasSearched = false;
 
+  void showImagePickerBottomSheet(BuildContext context, Map<String, dynamic> result) {
+    final String baseUrl = Constantes.BASE_URL_IMAGE;
+    final String? imageProfilPath = result['user']['image_profil'];
+    final String imageUrl = imageProfilPath != null ? "${baseUrl}storage/app/public/${imageProfilPath}" : "";
+
+    print("-----------${imageUrl}");
+    print("-----------${imageProfilPath}");
+
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white, // Couleur de fond
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)), // Coins arrondis en haut
+      ),
+      builder: (BuildContext context) {
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ImageProfileWidget(
+                  imageUrl: imageUrl,
+                  onClicked: () {},
+                ),
+                SizedBox(height: 16),
+                _buildInfoRow('Username:', result['user']['username']),
+                _buildInfoRow('Postnom:', result['postnom']),
+                _buildInfoRow('Prenom:', result['prenom']),
+                _buildInfoRow('Adresse:', result['adresse']),
+                _buildInfoRow('Téléphone:', result['telephone']),
+                _buildInfoRow('Specialite:', result['specialite'] ?? 'N/A'),
+                _buildInfoRow('Structure:', result['structure'] ?? 'N/A'),
+                _buildInfoRow('Email:', result['user']['email']),
+                _buildInfoRow('Genre:', result['genre']),
+                _buildInfoRow('Date de Naissance:', result['date_naissance']),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.lato(fontSize: 14),
+              textAlign: TextAlign.end, 
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isLoading = false;
+
 
   void _showDetailsDialog(BuildContext context, Map<String, dynamic> result) {
+    final String baseUrl = Constantes.BASE_URL_IMAGE;
+    final String? imageProfilPath =result['user']['image_profil'];
+    final String imageUrl = imageProfilPath != null ?
+    "${baseUrl}storage/${imageProfilPath}"
+        : "";
+    print("*++++++++++++++++++++++++++++++${imageUrl}");
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -78,6 +161,10 @@ class _MembrespageState extends State<Membrespage> {
           content: SingleChildScrollView(
             child: ListBody(
               children: [
+                ImageProfileWidget(
+                  imageUrl: imageUrl,
+                  onClicked: () {},
+                ),
                 Text('Username: ${result['user']['username']}', style: GoogleFonts.lato()),
                 Text('Postnom: ${result['postnom']}', style: GoogleFonts.lato()),
                 Text('Prenom: ${result['prenom']}', style: GoogleFonts.lato()),
@@ -105,22 +192,15 @@ class _MembrespageState extends State<Membrespage> {
 
   void _search() async {
     String query = _searchController.text;
-    bool isConnected = await checkInternetConnectivity();
-
-    if (query.isEmpty) {
-      _searchAllUsers();
-      if(isConnected){
-          print("MAMAMAMAMMAMAMAMAMA ${isConnected}");
-          await _searchAllUsersViaAPI();
-      }
-      return;
-    }
-
+    print("Muzolaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     setState(() {
       _hasSearched = true;
+      _isLoading = true;
       results = [];
     });
+    print("candyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
 
+    // Affiche le loading indicator immédiatement
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -129,17 +209,42 @@ class _MembrespageState extends State<Membrespage> {
       },
     );
 
-    if (isConnected) {
-      print("MAMAMAMAMMAMAMAMAMA ${isConnected}");
-      await _searchViaAPI(query);
-    }
-    else {
-      print("BIBIBIIIEEEEEEEEEEEE ${isConnected}");
-      _searchLocally(query);
+    // Lance la vérification de la connectivité et la recherche locale en parallèle
+    Future<bool> connectivityFuture = checkInternetConnectivity();
+    _searchAllUsers(); // Recherche locale de tous les utilisateurs
+    if (query.isNotEmpty) {
+      _searchLocally(query); // Recherche locale avec la requête
     }
 
-    Navigator.of(context).pop(); // Ferme le dialogue de chargement
-    setState(() {}); // Rafraîchit l'affichage
+    try {
+      bool isConnected = await connectivityFuture; // Attends la vérification de la connectivité
+
+      if (query.isEmpty) {
+        if (isConnected) {
+          print("MAMAMAMAMMAMAMAMAMA ${isConnected}");
+          await _searchAllUsersViaAPI();
+        }
+        return;
+      }
+
+      if (isConnected) {
+        print("MAMAMAMAMMAMAMAMAMA ${isConnected}");
+        try {
+          await _searchViaAPI(query);
+        } catch (e) {
+          showMsg(context, false, "Erreur de connexion lors de la recherche API");
+        }
+      } else {
+        print("BIBIBIIEEEEEEEEEEEEE ${isConnected}");
+        // Pas besoin de refaire la recherche locale ici, elle a déjà été lancée.
+        print("luzoolooooooooooooooooooooooooooooooooooooooooooooooo");
+      }
+    } finally {
+      Navigator.of(context).pop();
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<bool> checkInternetConnectivity() async {
@@ -152,15 +257,18 @@ class _MembrespageState extends State<Membrespage> {
 
   void _searchAllUsers() {
     var localListUsers = stockage.read(StockageKeys.allUsers);
+    List<Map<String, dynamic>> localResults = [];
     if (localListUsers != null) {
-      results = (localListUsers['personnels'] as List)
+      localResults = (localListUsers['personnels'] as List)
           .map<Map<String, dynamic>>((e) => UserModel.fromJson(e).toJson())
           .toList();
-    } else {
-      results = [];
     }
-    _hasSearched = true;
-    setState(() {});
+
+    // Affiche les résultats locaux immédiatement
+    setState(() {
+      results = localResults;
+      _hasSearched = true;
+    });
   }
 
   Future<void> _searchAllUsersViaAPI() async {
@@ -168,8 +276,11 @@ class _MembrespageState extends State<Membrespage> {
     var res = await ctrl.getListUsers();
 
     if (res.status == true) {
-      results = res.data;
-      print("MATAMAAAEE");
+      // Mets à jour l'UI avec les résultats de l'API
+      setState(() {
+        results = res.data;
+        print("MATAMAAAEE");
+      });
     } else {
       print("Erreur lors de la recherche : ${res.errorMsg}");
       SnackbarHelper.showSnackBar(res.errorMsg, isError: true);
@@ -182,7 +293,10 @@ class _MembrespageState extends State<Membrespage> {
     var res = await ctrl.searchMembers(querySearch);
 
     if (res.status == true) {
-      results = res.data;
+      // Mets à jour l'UI avec les résultats de l'API
+      setState(() {
+        results = res.data;
+      });
     } else {
       print("Erreur lors de la recherche : ${res.errorMsg}");
       SnackbarHelper.showSnackBar(res.errorMsg, isError: true);
@@ -191,20 +305,27 @@ class _MembrespageState extends State<Membrespage> {
 
   void _searchLocally(String query) {
     var localListUsers = stockage.read(StockageKeys.allUsers);
+    List<Map<String, dynamic>> localResults = [];
+
     if (localListUsers != null) {
-      results = (localListUsers['personnels'] as List)
+      localResults = (localListUsers['personnels'] as List)
           .where((user) => UserModel.fromJson(user).matricule?.toLowerCase().contains(query.toLowerCase()) ?? false)
           .map<Map<String, dynamic>>((e) => UserModel.fromJson(e).toJson())
           .toList();
     } else {
-      results = [];
       SnackbarHelper.showSnackBar("Aucune donnée locale disponible", isError: true);
     }
+
+    // Mets à jour l'UI avec les résultats locaux (ou les ajoute aux résultats existants)
+    setState(() {
+      results = localResults; // Ou results.addAll(localResults) si tu veux fusionner
+    });
   }
 
 
 
-@override
+
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -315,7 +436,8 @@ class _MembrespageState extends State<Membrespage> {
                                     children: [
                                       Expanded(
                                         child: GestureDetector(
-                                          onTap: () => _showDetailsDialog(context, result),
+                                          onTap: () => showImagePickerBottomSheet(context, result)
+                                          ,
                                           child: Padding(
                                             padding: EdgeInsets.all(12),
                                             child: Text(result['matricule']!, style: GoogleFonts.lato()),
@@ -324,7 +446,7 @@ class _MembrespageState extends State<Membrespage> {
                                       ),
                                       Expanded(
                                         child: GestureDetector(
-                                          onTap: () => _showDetailsDialog(context, result),
+                                          onTap: () => showImagePickerBottomSheet(context, result),
                                           child: Padding(
                                             padding: EdgeInsets.all(12),
                                             child: Text(result['nom']!, style: GoogleFonts.lato()),
@@ -333,7 +455,7 @@ class _MembrespageState extends State<Membrespage> {
                                       ),
                                       Expanded(
                                         child: GestureDetector(
-                                          onTap: () => _showDetailsDialog(context, result),
+                                          onTap: () => showImagePickerBottomSheet(context, result),
                                           child: Padding(
                                             padding: EdgeInsets.all(12),
                                             child: Text(getProfessionTitle(result['profession_id']!) ?? 'Inconnu', style: GoogleFonts.lato()),
