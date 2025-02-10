@@ -1,20 +1,14 @@
 import 'package:canineappadmin/controllers/AuthentificationCtrl.dart';
 import 'package:canineappadmin/utils/Routes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:canineappadmin/utils/helpers/snackbar_helper.dart';
 import 'package:canineappadmin/values/app_regex.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
 import '../components/app_text_form_field.dart';
-import '../resources/resources.dart';
 import '../utils/common_widgets/gradient_background.dart';
-import '../utils/helpers/navigation_helper.dart';
 import '../values/app_constants.dart';
-import '../values/app_routes.dart';
 import '../values/app_strings.dart';
-import '../values/app_theme.dart';
+import '../widgets/showMsg.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -113,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacementNamed(context, Routes.navRoute);
       });
     } else {
-      SnackbarHelper.showSnackBar(res.data?['message'],isError: true);
+      showMsg(context, false, "${res.data?['message']}");
 
     }
   }
