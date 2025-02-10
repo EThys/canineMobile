@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:canineappadmin/models/LoginModel.dart';
 import 'package:canineappadmin/models/UserModel.dart';
 import 'package:canineappadmin/utils/Endpoints.dart';
+import '../models/PersonelModel.dart';
 import '../models/ResponseModel.dart';
 import '../utils/requetes.dart';
 import 'package:get_storage/get_storage.dart';
@@ -94,27 +95,34 @@ class AuthentificationCtrl with ChangeNotifier {
   Future<HttpResponse> login(Map data) async {
     var url = "${Endpoints.loginEndpoint}";
     print("ethberg${url}");
+
     HttpResponse response = await postData(url, data);
-    print("gggggggggggggggggggggg${response.data?['token']}");
-    if (response.status==true) {
-      var temp_user = response.data?["personnel"] ?? {};
+
+    if (response.status == true) {
       var temp_userPreference = response.data?["user"] ?? {};
-      print("ELOOOOOOOOOUUUUUUUUU ${temp_user}");
+      var temp_personnel = response.data?["personnel"];
+
       user = UserModel.fromJson(temp_userPreference);
-      userPreference= UserModel.fromJson(temp_user);
-      print("ESIMBIEEEEEE: ${user}");
-      stockage?.write(
-          StockageKeys.tokenKey, response.data?['token'] ?? "");
+      Personnel? personnel;
+
+      if (temp_personnel != null) {
+        userPreference= UserModel.fromJson(temp_personnel);
+      }
+
+      print("User Info: ${user}");
+      print("Personnel Info: ${personnel}");
+
+      stockage?.write(StockageKeys.tokenKey, response.data?['token'] ?? "");
 
       notifyListeners();
-      var _token=stockage?.read(StockageKeys.tokenKey);
-      print("ESIMBIEEEEEE: ${user}");
-      print("ESIMBIEEEEEE koooooooooooooo: ${_token}");
+
+      var _token = stockage?.read(StockageKeys.tokenKey);
+      print("Token stored: ${_token}");
 
       getListUsers();
       print("${getListUsers.toString()}");
-
     }
+
     print(response.data);
     return response;
   }
