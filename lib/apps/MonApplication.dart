@@ -32,8 +32,15 @@ class MonApplication extends StatelessWidget {
         onGenerateRoute: RoutesManager.route,
         themeMode: ThemeMode.light,
         scaffoldMessengerKey: SnackbarHelper.key,
-        initialRoute:  Routes.splashscreenRoute,
+        initialRoute: _determineInitialRoute(token)
       ),
     );
+  }
+  String _determineInitialRoute(String? token) {
+    if (token != null && token.isNotEmpty) {
+      return Routes.navRoute;
+    } else {
+      return Routes.logInScreenRoute;
+    }
   }
 }
