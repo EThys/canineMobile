@@ -1,3 +1,4 @@
+import 'package:canineappadmin/utils/Constantes.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -20,6 +21,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   GetStorage stockage = GetStorage();
+
   final List<ProfessionModel> professionList = [
     ProfessionModel(id: 1, title: "Vétérinaire"),
     ProfessionModel(id: 2, title: "Eleveur"),
@@ -28,19 +30,28 @@ class _ProfilePageState extends State<ProfilePage> {
     ProfessionModel(id: 5, title: "Toiletteur"),
     ProfessionModel(id: 6, title: "Dealeur"),
     ProfessionModel(id: 7, title: "Cynophile"),
+    ProfessionModel(id: 8, title: "Instructeur"),
   ];
+
 
   @override
   Widget build(BuildContext context) {
+
+    final String baseUrl = Constantes.BASE_URL_IMAGE;
+    final String? imageProfilPath =stockage.read(StockageKeys.userKey)['image_profil'];
+    print("LIBOOOOOOOOOOOOOOOOOOOOOOOO++++++++++++++++++++++++++${imageProfilPath}");
+    final String imageUrl = imageProfilPath != null ? "${baseUrl}storage/app/public/${imageProfilPath}" : "";
+    print("-----------------OOOOOOOOOOOOOOOOOOOOOO++++++++++++++++++++++++++${imageUrl}");
     final user = UserPreferences.myUser;
+
     return Scaffold(
       appBar: buildAppBar(context),
       body: ListView(
         physics: BouncingScrollPhysics(),
         children: [
           ProfileWidget(
-            imagePath: user.imagePath,
-            onClicked: () async {},
+            imageUrl: imageUrl,
+            onClicked: () {},
           ),
           const SizedBox(height: 24),
           buildName(user),
@@ -69,13 +80,12 @@ class _ProfilePageState extends State<ProfilePage> {
       Column(
         children: [
           Text(
-            "${stockage.read(StockageKeys.userPreferenceKey)['nom']} ${stockage
-                .read(StockageKeys.userPreferenceKey)['prenom']}",
+            "${stockage.read(StockageKeys.userPreferenceKey)?['nom'] ?? 'Administrateur'} ${stockage.read(StockageKeys.userPreferenceKey)?['prenom'] ?? ''}",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
           ),
           const SizedBox(height: 4),
           Text(
-            "${stockage.read(StockageKeys.userKey)['email']}",
+            "${stockage.read(StockageKeys.userKey)?['email'] ?? 'Email non spécifié'}",
             style: TextStyle(color: Colors.grey),
           ),
         ],
@@ -84,7 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget buildPersonalInfoButton() =>
       ListTile(
         title: Text(
-            "User Name: ${stockage.read(StockageKeys.userKey)['username']}"),
+            "User Name: ${stockage.read(StockageKeys.userKey)?['username'] ?? 'Nom d’utilisateur non spécifié'}"),
         leading: Icon(Icons.person),
         onTap: () {
           // Handle tap
@@ -94,25 +104,25 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget buildMatriculeButton() =>
       ListTile(
         title: Text(
-            "Matricule: ${stockage.read(StockageKeys.userPreferenceKey)['matricule']}"),
-        leading: Icon(Icons.badge), // Badge icon for matricule
+            "Matricule: ${stockage.read(StockageKeys.userPreferenceKey)?['matricule'] ?? 'Matricule non spécifié'}"),
+        leading: Icon(Icons.badge),
         onTap: () {
           // Handle tap
         },
       );
 
-  Widget buildAddressButton() => ListTile(
-    title: Text(
-        "Adresse: ${stockage.read(StockageKeys.userPreferenceKey)['adresse']}"),
-    leading: Icon(Icons.home),
-    onTap: () {
-      // Gérer l'action de tap
-    },
-  );
-
+  Widget buildAddressButton() =>
+      ListTile(
+        title: Text(
+            "Adresse: ${stockage.read(StockageKeys.userPreferenceKey)?['adresse'] ?? 'Adresse non spécifiée'}"),
+        leading: Icon(Icons.home),
+        onTap: () {
+          // Gérer l'action de tap
+        },
+      );
 
   Widget buildProfessionButton() {
-    final professionId = stockage.read(StockageKeys.userPreferenceKey)['profession_id'];
+    final professionId = stockage.read(StockageKeys.userPreferenceKey)?['profession_id'];
 
     final profession = professionList.firstWhere(
           (prof) => prof.id == professionId,
@@ -123,27 +133,25 @@ class _ProfilePageState extends State<ProfilePage> {
       title: Text("Profession: ${profession.title}"),
       leading: Icon(Icons.business_center),
       onTap: () {
-
+        // Handle tap
       },
     );
   }
 
-
   Widget buildGenreButton() =>
       ListTile(
-        title:Text(
-            "Genre: ${stockage.read(StockageKeys.userPreferenceKey)['genre']}"),
+        title: Text(
+            "Genre: ${stockage.read(StockageKeys.userPreferenceKey)?['genre'] ?? 'Genre non spécifié'}"),
         leading: Icon(Icons.transgender), // Updated icon for genre
         onTap: () {
           // Handle tap
         },
       );
 
-
   Widget buildPhoneButton() =>
       ListTile(
         title: Text(
-            "Telephone: ${stockage.read(StockageKeys.userPreferenceKey)['telephone']}"),
+            "Téléphone: ${stockage.read(StockageKeys.userPreferenceKey)?['telephone'] ?? 'Téléphone non spécifié'}"),
         leading: Icon(Icons.phone), // Updated icon for telephone
         onTap: () {
           // Handle tap
