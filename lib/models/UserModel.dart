@@ -1,9 +1,9 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 // Function to parse JSON data into UserModel
 UserModel userModelFromJson(String str) => UserModel.fromJson(json.decode(str));
 
-// Function to convert UserModel to JSON
 String registerModelToJson(UserModel data) => json.encode(data.toJson());
 
 class UserModel {
@@ -23,6 +23,7 @@ class UserModel {
   String? structure;
   String? specialite;
   String? image_profil;
+  int? is_admin;
   User? user;
 
   UserModel({
@@ -39,9 +40,10 @@ class UserModel {
     this.telephone,
     this.email,
     this.date_naissance,
-    this.structure, // Initialize structure
-    this.specialite, // Initialize specialite
-    this.image_profil, // Initialize image_profil
+    this.structure,
+    this.specialite,
+    this.image_profil,
+    this.is_admin,
     this.user,
   });
 
@@ -62,6 +64,7 @@ class UserModel {
     structure: json["structure"],
     specialite: json["specialite"],
     image_profil: json["image_profil"],
+    is_admin: json["is_admin"],
     user: json["user"] != null ? User.fromJson(json["user"]) : null,
   );
 
@@ -82,6 +85,7 @@ class UserModel {
     "structure": structure,
     "specialite": specialite,
     "image_profil": image_profil,
+    "is_admin": is_admin,
     "user": user?.toJson(),
   };
 }
@@ -94,6 +98,7 @@ class User {
   dynamic email_verified_at;
   DateTime created_at;
   DateTime updated_at;
+  int? is_admin;
 
   User({
     required this.id,
@@ -103,6 +108,7 @@ class User {
     this.email_verified_at,
     required this.created_at,
     required this.updated_at,
+    required this.is_admin
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -113,6 +119,7 @@ class User {
     email_verified_at: json["email_verified_at"],
     created_at: DateTime.parse(json["created_at"]),
     updated_at: DateTime.parse(json["updated_at"]),
+    is_admin: json["is_admin"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -121,6 +128,7 @@ class User {
     "user_type_id": user_type_id,
     "email": email,
     "email_verified_at": email_verified_at,
+    "is_admin":is_admin,
     "created_at": created_at.toIso8601String(),
     "updated_at": updated_at.toIso8601String(),
   };
