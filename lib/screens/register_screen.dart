@@ -33,6 +33,12 @@ class _RegisterPageState extends State<RegisterPage> {
     'Masculin',
     'Féminin'
   ];
+  String? selectedTypeCompte;
+  static const List<String> _typeCompte= [
+    'Administrateur',
+    'Utilisateur'
+  ];
+
   int? professionId;
   File? _image;
   final picker = ImagePicker();
@@ -50,6 +56,8 @@ class _RegisterPageState extends State<RegisterPage> {
   late final TextEditingController passwordController;
   late final TextEditingController specialiteController;
   late final TextEditingController structureController;
+  late final TextEditingController isAdminController;
+
 
   final ValueNotifier<bool> passwordNotifier = ValueNotifier(true);
   final ValueNotifier<bool> fieldValidNotifier = ValueNotifier(false);
@@ -67,6 +75,7 @@ class _RegisterPageState extends State<RegisterPage> {
     structureController=TextEditingController()..addListener(controllerListener);
     specialiteController=TextEditingController()..addListener(controllerListener);
     passwordController = TextEditingController()..addListener(controllerListener);
+    isAdminController=TextEditingController()..addListener(controllerListener);
   }
 
   void disposeControllers() {
@@ -82,6 +91,7 @@ class _RegisterPageState extends State<RegisterPage> {
     passwordController.dispose();
     structureController.dispose();
     specialiteController.dispose();
+    isAdminController.dispose();
   }
 
   void controllerListener() {
@@ -97,6 +107,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final password = passwordController.text;
     final structure=structureController.text;
     final specialite=specialiteController.text;
+    final isAdmin=isAdminController.text;
 
     if (name.isEmpty && postnom.isEmpty && prenom.isEmpty && adresse.isEmpty &&
         password.isEmpty && profession.isEmpty &&
@@ -170,7 +181,7 @@ class _RegisterPageState extends State<RegisterPage> {
     Map<String, dynamic> userData = {
       "nom": nameController.text,
       "prenom": prenomController.text,
-      "postnom": postnomController.text,
+      "postnom": postnomController.text  ,
       "telephone": phoneController.text.isNotEmpty ? phoneController.text:"+243-----",
       "adresse": adresseController.text,
       "password": passwordController.text,
@@ -179,8 +190,9 @@ class _RegisterPageState extends State<RegisterPage> {
       "date_naissance": dateNaissanceontroller.text.isNotEmpty ? dateNaissanceontroller.text : "1900-01-01",
       "structure": structureController.text,
       "specialite": specialiteController.text,
-      "user_type_id": "2",
+      "user_type_id": 2,
       "profession_id": professionId.toString(),
+      "is_admin": selectedTypeCompte == "Administrateur" ? 1 : 0,
       "image": base64Image,
     };
 
@@ -629,6 +641,31 @@ class _RegisterPageState extends State<RegisterPage> {
                     genreController.text = value;
                     print('changing value to: $value');
                   }
+                },
+              ),
+            ),
+            SizedBox(height: 20,),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(
+                  color: Colors.grey,
+                  width: 2.0,
+                ),
+
+              ),
+              child: CustomDropdown<String>(
+                hintText: 'Type de compte',
+                items: _typeCompte,
+                decoration: CustomDropdownDecoration(
+                  expandedBorder: Border.all(
+                    color: Colors.grey,
+                  ),
+                ),
+                onChanged: (value) {
+                  selectedTypeCompte = value;
+                  print('changing value to: $value');
                 },
               ),
             ),

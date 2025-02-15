@@ -53,9 +53,9 @@ class _MembrespageState extends State<Membrespage> {
 
   Future<void> _checkUserType() async {
     GetStorage stockage = GetStorage();
-    final userTypeId = stockage.read(StockageKeys.userKey)['user_type_id']?? 0;
+    final isAdmin = stockage.read(StockageKeys.userKey)['is_admin']?? 0;
     setState(() {
-      _showFloatingActionButton = userTypeId == 1;
+      _showFloatingActionButton = isAdmin == 1;
     });
   }
 
